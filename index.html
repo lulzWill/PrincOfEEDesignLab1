@@ -1,0 +1,81 @@
+<html>
+	<head>
+		<title>Temperature View</title>
+		<script language="javascript" type="text/javascript" src="flot/jquery.js"></script>
+		<script language="javascript" type="text/javascript" src="flot/jquery.flot.js"></script>
+		<script src="//www.parsecdn.com/js/parse-1.5.0.min.js"></script>
+		<link href="flot/examples/examples.css" rel="stylesheet" type="text/css">
+		<script type="text/javascript">
+
+			$(function() {
+				var data = [], totalPoints = 300;
+
+				for(var i = 0; i < totalPoints; i++) {
+					data.push(0);
+				}
+
+				function getDataPoints() {
+					Parse.initialize("DgkajZ46p0LCwrwpfUFmbCeGoIizgVbo6z4LUEhP", "e1AtOMGA0JWTl9Uko5bWiCyP8a5Edo4K0hKDvXxK");
+					if(data.length > 0) data = data.slice(1);
+					
+					var TempData = Parse.Object.extend("TempData");
+					var query = new Parse.Query(TempData);
+
+					query.descending("updatedAt");
+					query.first({
+						success: function(object) {
+							data.push(object.get("TempValue"));
+							document.getElementById("currTemp").innerHTML = "Current Temperature: " + object.get("TempValue");
+						},
+						error: function(error) {
+							alert("Error: " + error.code + " " + error.message);
+						}
+					});
+					
+					var res = [];
+					for(var i = 0; i < data.length; ++i) {
+						res.push([i, data[i]])
+					}
+
+					return res;
+				}
+				var updateInterval = 1000;
+
+				var plot = $.plot("#placeholder", [ getDataPoints() ], {
+					series: {
+						shadowSize: 0
+					},
+					yaxis: {
+						min: 0,
+						max: 100
+					},
+					xaxis: {
+						show: false
+					}
+				});
+
+				function update() {
+					plot.setData([getDataPoints()]);
+
+					plot.draw();
+					setTimeout(update, updateInterval);
+				}
+
+				update();
+			});
+		</script>
+	</head>
+	<body>
+		<div id="header">
+			<h2>Temperature Graph</h2>
+		</div>
+		<div id="content">
+			<div class="demo-container">
+				<div id="placeholder" class="demo-placeholder"></div>
+			</div>
+		</div>
+		<div id="footer">
+			<h2 id="currTemp">Current Temperature: </h2>
+		</div>
+	</body>
+</html>
