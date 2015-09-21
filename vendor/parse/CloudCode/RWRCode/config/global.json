@@ -1,0 +1,14 @@
+{
+    "applications": {
+        "Hospital Management System": {
+            "applicationId": "kHbyXSdw4DIXw4Q0DYDcdM8QTDQnOewKJhc9ppAr", 
+            "masterKey": "3q1HVOiiywyBdtalMN1sozceJbNXuD9WKZSSmgvI"
+        }, 
+        "_default": {
+            "link": "Hospital Management System"
+        }
+    }, 
+    "global": {
+        "parseVersion": "1.4.2"
+    }
+}

@@ -1,3 +1,5 @@
+#include <Parse.h>
+#include <Bridge.h>
 #include <OneWire.h> 
 
 //Setup button
@@ -22,8 +24,10 @@ int intTemp = 0;
 OneWire ds(tempPin); // on digital pin 2
 
 void setup(void) {
+ Bridge.begin();
  Serial.begin(9600);
-
+ Parse.begin("DgkajZ46p0LCwrwpfUFmbCeGoIizgVbo6z4LUEhP", "dGGMXTyh9qcqaJHHDeAitcMm0CZ0nCNX7Ag1QCXw");
+   
  //Set pin modes
  pinMode(LEDone, OUTPUT);
  pinMode(LEDtwo, OUTPUT);
@@ -66,7 +70,8 @@ void loop(void) {
   delay(1000);
   temperature = getTemp();
  }
- 
+ sendTemp(temperature);
+
  Serial.println(temperature);
 
  temperature += 0.5;
@@ -135,3 +140,4 @@ float getTemp(){
  
  return TemperatureSum;
 }
+
