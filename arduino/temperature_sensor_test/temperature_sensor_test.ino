@@ -60,7 +60,7 @@ void displayLEDs()
   {
     displayOn();
   }
-  else
+  else if(!isOn())
   {
     allLightsOff();
   }
