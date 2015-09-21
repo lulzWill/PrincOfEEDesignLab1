@@ -60,7 +60,7 @@ void displayLEDs()
   {
     displayOn();
   }
-  else if(!isOn())
+  else
   {
     allLightsOff();
   }
@@ -71,7 +71,7 @@ void displayOn() {
    {
      int num = bitRead(intTemp, i);
      if(num == 1){
-       digitalWrite(i+4, HIGH);
+       digitalWrite(i+LEDone, HIGH);
      }
    }
 }
@@ -89,7 +89,7 @@ void loop(void) {
 
  if(isOn()) {
   displayOn();
- } else {
+ } else if(digitalRead(buttonPin) == HIGH){
   allLightsOff();
  }
  
@@ -179,7 +179,6 @@ void setTemp(float temperature) {
     client.println(parametri);
   } else {
     Serial.println("connection failed");
-//    digitalWrite(led_rosso, HIGH);
     delay(1000);
   }
   if (client.connected()) {
@@ -195,7 +194,11 @@ bool isOn() {
   char c = client.read();
   if(c == 't') {
     return true;
-  } else {
+  } else if(c == 'f'){
+    return false;
+  }
+  else {
+    Serial.println("isOn function error");
     return false;
   }
 }
