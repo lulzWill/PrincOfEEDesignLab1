@@ -67,7 +67,7 @@
 
 					query.first({
 						success: function(object) {
-							object.set("isOn", true);
+							object.set("isOn", "true");
 							object.save();
 							document.getElementById("btnOff").disabled = false;
 						},
@@ -92,7 +92,7 @@
 
 					query.first({
 						success: function(object) {
-							object.set("isOn", false);
+							object.set("isOn", "false");
 							object.save();
 							document.getElementById("btnOn").disabled = false;
 						},
@@ -120,7 +120,7 @@
 
 					queryTop.first({
 						success: function(object) {
-							if(object.get("isOn") && !object.get("isUnplugged")) {
+							if(object.get("isOn") == "true" && !object.get("isUnplugged")) {
 								var TempData = Parse.Object.extend("TempData");
 								var query = new Parse.Query(TempData);
 
