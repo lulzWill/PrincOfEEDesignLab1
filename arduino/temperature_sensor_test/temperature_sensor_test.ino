@@ -192,6 +192,7 @@ bool isOn() {
   client.get("http://princofeedesignlab1-tempsensor.rhcloud.com/ispressed.php");
   
   char c = client.read();
+  Serial.println(c);
   if(c == 't') {
     return true;
   } else if(c == 'f'){

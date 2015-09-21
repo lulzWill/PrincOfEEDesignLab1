@@ -7,6 +7,6 @@
 	use Parse\ParseObject;
  
 	$testObject = ParseObject::create("TempData");
-	$testObject->set("TempValue", $_POST["temp"]);
+	$testObject->set("TempValue", $_GET["temp"]);
 	$testObject->save();
 ?>

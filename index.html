@@ -24,6 +24,47 @@
 	    <input type="text" hidden="true" value="" id="tempVal"></input>
 
 		<script type="text/javascript">
+			function sendTextSettings() {
+				Parse.initialize("DgkajZ46p0LCwrwpfUFmbCeGoIizgVbo6z4LUEhP", "e1AtOMGA0JWTl9Uko5bWiCyP8a5Edo4K0hKDvXxK");
+				var PhoneInfo = Parse.Object.extend("PhoneInfo");
+				var query = new Parse.Query(PhoneInfo);
+
+				query.equalTo("deviceName", "Temp Sensor");
+
+				query.first({
+					success: function(object) {
+						object.set("phoneNumber", document.getElementById("phoneNumber").value);
+						object.set("upperBound", document.getElementById("upperBound").value);
+						object.set("lowerBound", document.getElementById("lowerBound").value);
+						object.set("messageBody", document.getElementById("textBody").value);
+						object.save();	
+					},
+					error: function(error) {
+						alert("Error: " + error.code + " " + error.message);
+					}
+				});
+			}
+
+			function initFormItems() {
+				Parse.initialize("DgkajZ46p0LCwrwpfUFmbCeGoIizgVbo6z4LUEhP", "e1AtOMGA0JWTl9Uko5bWiCyP8a5Edo4K0hKDvXxK");
+				var PhoneInfo = Parse.Object.extend("PhoneInfo");
+				var query = new Parse.Query(PhoneInfo);
+
+				query.equalTo("deviceName", "Temp Sensor");
+
+				query.first({
+					success: function(object) {
+						document.getElementById("phoneNumber").value = object.get("phoneNumber");
+						document.getElementById("upperBound").value = object.get("upperBound");
+						document.getElementById("lowerBound").value = object.get("lowerBound");
+						document.getElementById("textBody").value = object.get("messageBody");
+					},
+					error: function(error) {
+						alert("Error: " + error.code + " " + error.message);
+					}
+				});
+			}
+			
 			function initThirdBtn() {
 				Parse.initialize("DgkajZ46p0LCwrwpfUFmbCeGoIizgVbo6z4LUEhP", "e1AtOMGA0JWTl9Uko5bWiCyP8a5Edo4K0hKDvXxK");
 				var MachineMetadata = Parse.Object.extend("MachineMetadata");
@@ -196,7 +237,7 @@
 			});
 		</script>
 	</head>
-	<body onload="initThirdBtn()">
+	<body onload="initThirdBtn(); initFormItems()">
 		<div id="header">
 			<h2>Temperature Graph</h2>
 		</div>
@@ -215,6 +256,26 @@
 			  <button type="button" class="btn btn-success" id="btnOn" onClick="setOn()">On</button>
 			  <button type="button" class="btn btn-danger" id="btnOff" onClick="setOff()">Off</button>
 			</div>
+		</div>
+
+		<div style="width:40%;margin-left: 30%;">
+		  <div class="form-group">
+		    <label for="phoneNumber">Phone Number</label>
+		    <input type="text" class="form-control" id="phoneNumber" placeholder="Please Enter a PhoneNumber">
+		  </div>
+		  <div class="form-group">
+		    <label for="upperBound">Upper Bound</label>
+		    <input type="number" class="form-control" id="upperBound" placeholder="Please Enter an Upper Bound">
+		  </div>
+		  <div class="form-group">
+		    <label for="lowerBound">Lower Bound</label>
+		    <input type="number" class="form-control" id="lowerBound" placeholder="Please Enter an Lower Bound">
+		  </div>
+		  <div class="form-group">
+		  	<label for="textBody">Text Body</label>
+		  	<textarea class="form-control" id="textBody" placeholder="Please Enter a Message to be sent" rows="3"></textarea>
+		  </div>
+		  <button class="btn btn-default" id="submitBtn" onclick="sendTextSettings()">Submit</button>
 		</div>
 	</body>
 </html>
