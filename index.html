@@ -24,6 +24,28 @@
 	    <input type="text" hidden="true" value="" id="tempVal"></input>
 
 		<script type="text/javascript">
+			function initThirdBtn() {
+				Parse.initialize("DgkajZ46p0LCwrwpfUFmbCeGoIizgVbo6z4LUEhP", "e1AtOMGA0JWTl9Uko5bWiCyP8a5Edo4K0hKDvXxK");
+				var MachineMetadata = Parse.Object.extend("MachineMetadata");
+				var query = new Parse.Query(MachineMetadata);
+
+				query.equalTo("deviceName", "Temp Sensor");
+
+				query.first({
+					success: function(object) {
+						if(object.get("isOn") == "true") {
+							document.getElementById("btnOff").disabled = false;
+							document.getElementById("btnOn").disabled = true;
+						} else {
+							document.getElementById("btnOff").disabled = true;
+							document.getElementById("btnOn").disabled = false;
+						}	
+					},
+					error: function(error) {
+						alert("Error: " + error.code + " " + error.message);
+					}
+				});
+			}
 			function setC() {
 				document.getElementById("tempType").value = "C";
 				document.getElementById("btnC").disabled = true;
@@ -45,20 +67,6 @@
 			function setOn() {
 					document.getElementById("btnOn").disabled = true;
 
-					if(document.getElementById("tempType").value == "C") {
-						document.getElementById("currTemp").innerHTML = "Current Temperature: " + document.getElementById("tempVal").value +"°C";
-						
-						document.getElementById("btnC").disabled = true;
-						document.getElementById("btnF").disabled = false;
-					} else {
-						var convertedTemp = document.getElementById("tempVal").value;
-						convertedTemp = ((9/5)*convertedTemp) + 32;
-	
-						document.getElementById("currTemp").innerHTML = "Current Temperature: " + convertedTemp +"°F";
-						document.getElementById("btnC").disabled = false;
-						document.getElementById("btnF").disabled = true;
-					}
-
 					Parse.initialize("DgkajZ46p0LCwrwpfUFmbCeGoIizgVbo6z4LUEhP", "e1AtOMGA0JWTl9Uko5bWiCyP8a5Edo4K0hKDvXxK");
 					var MachineMetadata = Parse.Object.extend("MachineMetadata");
 					var query = new Parse.Query(MachineMetadata);
@@ -79,11 +87,7 @@
 
 			function setOff() {
 					document.getElementById("btnOff").disabled = true;
-					document.getElementById("currTemp").innerHTML = "Device is Off";
-
-					document.getElementById("btnC").disabled = true;
-					document.getElementById("btnF").disabled = true;
-
+					
 					Parse.initialize("DgkajZ46p0LCwrwpfUFmbCeGoIizgVbo6z4LUEhP", "e1AtOMGA0JWTl9Uko5bWiCyP8a5Edo4K0hKDvXxK");
 					var MachineMetadata = Parse.Object.extend("MachineMetadata");
 					var query = new Parse.Query(MachineMetadata);
@@ -120,7 +124,7 @@
 
 					queryTop.first({
 						success: function(object) {
-							if(object.get("isOn") == "true" && !object.get("isUnplugged")) {
+							if(!object.get("isUnplugged")) {
 								var TempData = Parse.Object.extend("TempData");
 								var query = new Parse.Query(TempData);
 
@@ -138,23 +142,14 @@
 										}
 
 										document.getElementById("tempVal").value = object.get("TempValue");
-										document.getElementById("btnOff").disabled = false;
-										document.getElementById("btnOn").disabled = true;
 									},
 									error: function(error) {
 										alert("Error: " + error.code + " " + error.message);
 									}
 								});
-							} else if(!object.get("isUnplugged")){
-								data.push(null);
-								document.getElementById("currTemp").innerHTML = "Device is Off";
-								document.getElementById("btnOff").disabled = true;
-								document.getElementById("btnOn").disabled = false;
 							} else {
 								data.push(null);
 								document.getElementById("currTemp").innerHTML = "Device Unplugged";
-								document.getElementById("btnOff").disabled = true;
-								document.getElementById("btnOn").disabled = true;
 							}
 						},
 						error: function(error) {
@@ -201,7 +196,7 @@
 			});
 		</script>
 	</head>
-	<body>
+	<body onload="initThirdBtn()">
 		<div id="header">
 			<h2>Temperature Graph</h2>
 		</div>
