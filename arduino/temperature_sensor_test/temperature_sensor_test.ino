@@ -1,5 +1,5 @@
 #include <Bridge.h>
-#include <OneWire.h> 
+#include <OneWire.h>
 #include <Console.h>
 #include <FileIO.h>
 #include <HttpClient.h>
@@ -29,7 +29,7 @@ int intTemp = 0;
 String parametri = "";          //String of POST parameters
 
 //IP Address of the sever on which there is the WS: http://www.mywebsite.com/
-IPAddress server(52,3,191,89);
+IPAddress server(52, 3, 191, 89);
 
 YunClient client;
 
@@ -37,26 +37,46 @@ YunClient client;
 OneWire ds(tempPin); // on digital pin 2
 
 void setup(void) {
- Bridge.begin();
- Serial.begin(9600);
- 
- //Set pin modes
- pinMode(LEDone, OUTPUT);
- pinMode(LEDtwo, OUTPUT);
- pinMode(LEDthree, OUTPUT);
- pinMode(LEDfour, OUTPUT);
- pinMode(LEDfive, OUTPUT);
- pinMode(LEDsix, OUTPUT);
- pinMode(LEDseven, OUTPUT);
+  Bridge.begin();
+  Serial.begin(9600);
 
- //Attach interrupt
- attachInterrupt(buttonInt, displayLEDs, CHANGE);
+  //Set pin modes
+  pinMode(LEDone, OUTPUT);
+  pinMode(LEDtwo, OUTPUT);
+  pinMode(LEDthree, OUTPUT);
+  pinMode(LEDfour, OUTPUT);
+  pinMode(LEDfive, OUTPUT);
+  pinMode(LEDsix, OUTPUT);
+  pinMode(LEDseven, OUTPUT);
+
+  //Attach interrupt
+  attachInterrupt(buttonInt, displayLEDs, CHANGE);
+
+  HttpClient client;
+  char c = 'a';
+  while (c != 't' && c != 'f')
+  {
+    client.get("http://princofeedesignlab1-tempsensor.rhcloud.com/ispressed.php");
+    c = client.read();
+  }
+
+  allLightsOn();
+  delay(100);
+  allLightsOff();
+  delay(100);
+  allLightsOn();
+  delay(100);
+  allLightsOff();
+  delay(100);
+  allLightsOn();
+  delay(100);
+  allLightsOff();
 }
 
 //Interrupt function
 void displayLEDs()
 {
-  if(digitalRead(buttonPin) == LOW)
+  if (digitalRead(buttonPin) == LOW)
   {
     displayOn();
   }
@@ -67,135 +87,121 @@ void displayLEDs()
 }
 
 void displayOn() {
- for(int i=0; i<numOfLEDs; i++) 
-   {
-     int num = bitRead(intTemp, i);
-     if(num == 1){
-       digitalWrite(i+LEDone, HIGH);
-     }
-   }
+  for (int i = 0; i < numOfLEDs; i++)
+  {
+    int num = bitRead(intTemp, i);
+    if (num == 1) {
+      digitalWrite(i + LEDone, HIGH);
+    }
+  }
 }
 
 void loop(void) {
- float temperature = getTemp();
- while(temperature == -1000)
- {
-  allLightsOn();
-  delay(1000);
-  allLightsOff();
-  delay(1000);
-  temperature = getTemp();
- }
+  float temperature = getTemp();
+  if (temperature == -1000)
+  {
+    HttpClient client;
+    while (temperature == -1000) {
+      parametri = "http://princofeedesignlab1-tempsensor.rhcloud.com/words.php?temp=null";
+      client.get(parametri);
 
- if(isOn()) {
-  displayOn();
- } else if(digitalRead(buttonPin) == HIGH){
-  allLightsOff();
- }
- 
- setTemp(temperature);
- Serial.println(temperature);
+      allLightsOn();
+      delay(1000);
+      allLightsOff();
+      delay(1000);
+      temperature = getTemp();
+    }
+  }
 
- temperature += 0.5;
- intTemp = (int) temperature;
- Serial.println(intTemp);
- Serial.println();
- delay(1000);
+  if (isOn()) {
+    displayOn();
+  } else if (digitalRead(buttonPin) == HIGH) {
+    allLightsOff();
+  }
+
+  setTemp(temperature);
+  Serial.println(temperature);
+
+  temperature += 0.5;
+  intTemp = (int) temperature;
+  Serial.println(intTemp);
+  Serial.println();
+  delay(1000);
 }
 
-void allLightsOff(){
-  for(int i = LEDone; i < LEDone + numOfLEDs; i++){
+void allLightsOff() {
+  for (int i = LEDone; i < LEDone + numOfLEDs; i++) {
     digitalWrite(i, LOW);
   }
- return;
+  return;
 }
 
-void allLightsOn(){
-  for(int i = LEDone; i < LEDone + numOfLEDs; i++){
+void allLightsOn() {
+  for (int i = LEDone; i < LEDone + numOfLEDs; i++) {
     digitalWrite(i, HIGH);
   }
- return;
+  return;
 }
 
-float getTemp(){
- //returns the temperature from one DS18S20 in DEG Celsius
+float getTemp() {
+  //returns the temperature from one DS18S20 in DEG Celsius
 
- byte data[12];
- byte addr[8];
+  byte data[12];
+  byte addr[8];
 
- if ( !ds.search(addr)) {
-   //no more sensors on chain, reset search
-   ds.reset_search();
-   return -1000;
- }
+  if ( !ds.search(addr)) {
+    //no more sensors on chain, reset search
+    ds.reset_search();
+    return -1000;
+  }
 
- if ( OneWire::crc8( addr, 7) != addr[7]) {
-   Serial.println("CRC is not valid!");
-   return -1000;
- }
+  if ( OneWire::crc8( addr, 7) != addr[7]) {
+    Serial.println("CRC is not valid!");
+    return -1000;
+  }
 
- if ( addr[0] != 0x10 && addr[0] != 0x28) {
-   Serial.print("Device is not recognized");
-   return -1000;
- }
+  if ( addr[0] != 0x10 && addr[0] != 0x28) {
+    Serial.print("Device is not recognized");
+    return -1000;
+  }
 
- ds.reset();
- ds.select(addr);
- ds.write(0x44,1); // start conversion, with parasite power on at the end
+  ds.reset();
+  ds.select(addr);
+  ds.write(0x44, 1); // start conversion, with parasite power on at the end
 
- byte present = ds.reset();
- ds.select(addr);  
- ds.write(0xBE); // Read Scratchpad
+  byte present = ds.reset();
+  ds.select(addr);
+  ds.write(0xBE); // Read Scratchpad
 
- 
- for (int i = 0; i < 9; i++) { // we need 9 bytes
-  data[i] = ds.read();
- }
- 
- ds.reset_search();
- 
- byte MSB = data[1];
- byte LSB = data[0];
 
- float tempRead = ((MSB << 8) | LSB); //using two's compliment
- float TemperatureSum = tempRead / 16;
- 
- return TemperatureSum;
+  for (int i = 0; i < 9; i++) { // we need 9 bytes
+    data[i] = ds.read();
+  }
+
+  ds.reset_search();
+
+  byte MSB = data[1];
+  byte LSB = data[0];
+
+  float tempRead = ((MSB << 8) | LSB); //using two's compliment
+  float TemperatureSum = tempRead / 16;
+
+  return TemperatureSum;
 }
 
 void setTemp(float temperature) {
-  if (client.connect(server, 80)) {
-    Serial.println("connected");
-
-    parametri = "temp=" + String(temperature);
-    client.println("POST /words.php HTTP/1.1");
-    client.println("Host: princofeedesignlab1-tempsensor.rhcloud.com");
-    client.print("Content-length:");
-    client.println(parametri.length());
-    Serial.println(parametri);
-    client.println("Connection: Close");
-    client.println("Content-Type: application/x-www-form-urlencoded;");
-    client.println();
-    client.println(parametri);
-  } else {
-    Serial.println("connection failed");
-    delay(1000);
-  }
-  if (client.connected()) {
-    client.stop();   //disconnect from server
-  }
-  delay(500);
+  HttpClient client;
+  parametri = "http://princofeedesignlab1-tempsensor.rhcloud.com/words.php?temp=" + String(temperature);
+  client.get(parametri);
 }
-
 bool isOn() {
   HttpClient client;
   client.get("http://princofeedesignlab1-tempsensor.rhcloud.com/ispressed.php");
-  
+
   char c = client.read();
-  Serial.println(c);
-  if(c == 't') {
+  if (c == 't') {
     return true;
-  } else if(c == 'f'){
+  } else if (c == 'f') {
     return false;
   }
   else {
@@ -203,4 +209,3 @@ bool isOn() {
     return false;
   }
 }
-
