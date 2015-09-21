@@ -1,6 +1,13 @@
-#include <Parse.h>
 #include <Bridge.h>
 #include <OneWire.h> 
+#include <Console.h>
+#include <FileIO.h>
+#include <HttpClient.h>
+#include <Mailbox.h>
+#include <Process.h>
+#include <YunClient.h>
+#include <YunServer.h>
+#include <SPI.h>
 
 //Setup button
 int buttonInt = 0;
@@ -19,6 +26,12 @@ int numOfLEDs = 7;
 //Temperature Sensor Pin
 int tempPin = 2; //DS18S20 Signal pin on digital 2
 int intTemp = 0;
+String parametri = "";          //String of POST parameters
+
+//IP Address of the sever on which there is the WS: http://www.mywebsite.com/
+IPAddress server(52,3,191,89);
+
+YunClient client;
 
 //Temperature chip i/o
 OneWire ds(tempPin); // on digital pin 2
@@ -26,8 +39,7 @@ OneWire ds(tempPin); // on digital pin 2
 void setup(void) {
  Bridge.begin();
  Serial.begin(9600);
- Parse.begin("DgkajZ46p0LCwrwpfUFmbCeGoIizgVbo6z4LUEhP", "dGGMXTyh9qcqaJHHDeAitcMm0CZ0nCNX7Ag1QCXw");
-   
+ 
  //Set pin modes
  pinMode(LEDone, OUTPUT);
  pinMode(LEDtwo, OUTPUT);
@@ -46,18 +58,22 @@ void displayLEDs()
 {
   if(digitalRead(buttonPin) == LOW)
   {
-    for(int i=0; i<numOfLEDs; i++) 
-    {
-      int num = bitRead(intTemp, i);
-      if(num == 1){
-        digitalWrite(i+4, HIGH);
-      }
-    }
+    displayOn();
   }
   else
   {
     allLightsOff();
   }
+}
+
+void displayOn() {
+ for(int i=0; i<numOfLEDs; i++) 
+   {
+     int num = bitRead(intTemp, i);
+     if(num == 1){
+       digitalWrite(i+4, HIGH);
+     }
+   }
 }
 
 void loop(void) {
@@ -70,8 +86,14 @@ void loop(void) {
   delay(1000);
   temperature = getTemp();
  }
- sendTemp(temperature);
 
+ if(isOn()) {
+  displayOn();
+ } else {
+  allLightsOff();
+ }
+ 
+ setTemp(temperature);
  Serial.println(temperature);
 
  temperature += 0.5;
@@ -139,5 +161,42 @@ float getTemp(){
  float TemperatureSum = tempRead / 16;
  
  return TemperatureSum;
+}
+
+void setTemp(float temperature) {
+  if (client.connect(server, 80)) {
+    Serial.println("connected");
+
+    parametri = "temp=" + String(temperature);
+    client.println("POST /words.php HTTP/1.1");
+    client.println("Host: princofeedesignlab1-tempsensor.rhcloud.com");
+    client.print("Content-length:");
+    client.println(parametri.length());
+    Serial.println(parametri);
+    client.println("Connection: Close");
+    client.println("Content-Type: application/x-www-form-urlencoded;");
+    client.println();
+    client.println(parametri);
+  } else {
+    Serial.println("connection failed");
+//    digitalWrite(led_rosso, HIGH);
+    delay(1000);
+  }
+  if (client.connected()) {
+    client.stop();   //disconnect from server
+  }
+  delay(500);
+}
+
+bool isOn() {
+  HttpClient client;
+  client.get("http://princofeedesignlab1-tempsensor.rhcloud.com/ispressed.php");
+  
+  char c = client.read();
+  if(c == 't') {
+    return true;
+  } else {
+    return false;
+  }
 }
 
