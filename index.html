@@ -22,6 +22,9 @@
 	    <![endif]-->
 	    <input type="text" hidden="true" value="C" id="tempType"></input>
 	    <input type="text" hidden="true" value="" id="tempVal"></input>
+	    <input type="text" hidden="true" value="false" id="wentOver"></input>
+	    <input type="number" hidden="true" value="0" id="lastWritten"></input>
+		<input type="text" hidden="true" value="" id="lastId"></input>
 
 		<script type="text/javascript">
 			function sendTextSettings() {
@@ -37,6 +40,7 @@
 						object.set("upperBound", document.getElementById("upperBound").value);
 						object.set("lowerBound", document.getElementById("lowerBound").value);
 						object.set("messageBody", document.getElementById("textBody").value);
+						object.set("messageBody2", document.getElementById("textBody2").value);
 						object.save();	
 					},
 					error: function(error) {
@@ -58,6 +62,7 @@
 						document.getElementById("upperBound").value = object.get("upperBound");
 						document.getElementById("lowerBound").value = object.get("lowerBound");
 						document.getElementById("textBody").value = object.get("messageBody");
+						document.getElementById("textBody2").value = object.get("messageBody2");
 					},
 					error: function(error) {
 						alert("Error: " + error.code + " " + error.message);
@@ -101,7 +106,8 @@
 
 				var convertedTemp = document.getElementById("tempVal").value;
 				convertedTemp = ((9/5)*convertedTemp) + 32;
-				
+				convertedTemp = Math.round(convertedTemp*100)/100;
+
 				document.getElementById("currTemp").innerHTML = "Current Temperature: " + convertedTemp +"°F";
 			}
 
@@ -149,10 +155,27 @@
 
 			$(function() {
 				var data = [], totalPoints = 300;
+				Parse.initialize("DgkajZ46p0LCwrwpfUFmbCeGoIizgVbo6z4LUEhP", "e1AtOMGA0JWTl9Uko5bWiCyP8a5Edo4K0hKDvXxK");
 
-				for(var i = 0; i < totalPoints; i++) {
-					data.push(null);
-				}
+				var TempData = Parse.Object.extend("TempData");
+				var query = new Parse.Query(TempData);
+
+				query.descending("createdAt");
+				query.limit(totalPoints);
+
+				query.find({
+					success: function(results) {
+						console.log(JSON.stringify(results, null, 4));
+						for(var i = 0; i < results.length; i++) {
+								data.push(results[i].get("TempValue"));
+						}
+						data = data.reverse();
+					},
+					error: function(error) {
+						alert("Error: " + error.code + " " + error.message);
+					}
+				});
+				
 
 				function getDataPoints() {
 					Parse.initialize("DgkajZ46p0LCwrwpfUFmbCeGoIizgVbo6z4LUEhP", "e1AtOMGA0JWTl9Uko5bWiCyP8a5Edo4K0hKDvXxK");
@@ -172,17 +195,53 @@
 								query.descending("updatedAt");
 								query.first({
 									success: function(object) {
-										data.push(object.get("TempValue"));
-										if(document.getElementById("tempType").value == "C") {
+										if(document.getElementById("lastWritten").value > 4) {
+											document.getElementById("currTemp").innerHTML = "DATA UNAVAILABLE";
+											data.push(null);
+										} else if(document.getElementById("tempType").value == "C") {
 											document.getElementById("currTemp").innerHTML = "Current Temperature: " + object.get("TempValue") +"°C";
+											data.push(object.get("TempValue"));
 										} else {
 											var convertedTemp = object.get("TempValue");
 											convertedTemp = ((9/5)*convertedTemp) + 32;
-	
+											convertedTemp = Math.round(convertedTemp*100)/100;
+
+											data.push(object.get("TempValue"));
 											document.getElementById("currTemp").innerHTML = "Current Temperature: " + convertedTemp +"°F";
 										}
 
+										if(document.getElementById("lastId").value == object.id) {
+											document.getElementById("lastWritten").value = parseInt(document.getElementById("lastWritten").value, 10) + 1;
+											console.log(document.getElementById("lastWritten").value);
+										} else {
+											document.getElementById("lastId").value = object.id;
+											console.log(document.getElementById("lastId").value)
+											document.getElementById("lastWritten").value = 0;
+										}
+
 										document.getElementById("tempVal").value = object.get("TempValue");
+
+										var PhoneInfo = Parse.Object.extend("PhoneInfo");
+										var queryThree = new Parse.Query(PhoneInfo);
+
+										queryThree.equalTo("deviceName", "Temp Sensor");
+
+										queryThree.first({
+											success: function(object) {
+												if(document.getElementById("tempVal").value > object.get("upperBound") && document.getElementById("wentOver").value == "false") {
+													document.getElementById("wentOver").value = "true";
+													$.get("sendmail.php?sendTo=" + object.get("phoneNumber") + "&body=" + object.get("messageBody"));
+												} else if(document.getElementById("tempVal").value < object.get("lowerBound") && document.getElementById("wentOver").value == "false") {
+													document.getElementById("wentOver").value = "true";
+													$.get("sendmail.php?sendTo=" + object.get("phoneNumber") + "&body=" + object.get("messageBody2"));
+												} else if(document.getElementById("tempVal").value > object.get("lowerBound") && document.getElementById("tempVal").value < object.get("upperBound")){
+													document.getElementById("wentOver").value = "false";
+												}
+											},
+											error: function(error) {
+												alert("Error: " + error.code + " " + error.message);
+											}
+										});
 									},
 									error: function(error) {
 										alert("Error: " + error.code + " " + error.message);
@@ -264,16 +323,20 @@
 		    <input type="text" class="form-control" id="phoneNumber" placeholder="Please Enter a PhoneNumber">
 		  </div>
 		  <div class="form-group">
-		    <label for="upperBound">Upper Bound</label>
+		    <label for="upperBound">Upper Bound(C)</label>
 		    <input type="number" class="form-control" id="upperBound" placeholder="Please Enter an Upper Bound">
 		  </div>
 		  <div class="form-group">
-		    <label for="lowerBound">Lower Bound</label>
+		    <label for="lowerBound">Lower Bound(C)</label>
 		    <input type="number" class="form-control" id="lowerBound" placeholder="Please Enter an Lower Bound">
 		  </div>
 		  <div class="form-group">
-		  	<label for="textBody">Text Body</label>
+		  	<label for="textBody">Text Body Upper</label>
 		  	<textarea class="form-control" id="textBody" placeholder="Please Enter a Message to be sent" rows="3"></textarea>
+		  </div>
+		  <div class="form-group">
+		  	<label for="textBody2">Text Body Lower</label>
+		  	<textarea class="form-control" id="textBody2" placeholder="Please Enter a Message to be sent" rows="3"></textarea>
 		  </div>
 		  <button class="btn btn-default" id="submitBtn" onclick="sendTextSettings()">Submit</button>
 		</div>

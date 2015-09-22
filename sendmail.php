@@ -7,7 +7,7 @@
 	$client = new Services_Twilio($account_sid, $auth_token); 
 	 
 	$client->account->messages->create(array(  
-		'To' => "16307449777",
+		'To' => $_GET["sendTo"],
 		'From' => "+13317033057", 
 		'Body' => $_GET["body"],    
 	));

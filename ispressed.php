@@ -10,5 +10,18 @@
  	$query = new ParseQuery("MachineMetadata");
 	$query->equalTo("deviceName", "Temp Sensor");
 	$results = $query->find();
-	echo $results[0]->get("isOn");
+	$testObject = $results[0];
+
+ 	if($_GET["action"] == "unplugged") {
+		$testObject->set("isUnplugged", true);
+		$testObject->save();
+ 	} else if($_GET["action"] == "plugged") {
+		$testObject->set("isUnplugged", false);
+		$testObject->save();
+ 	} else {
+ 		$query = new ParseQuery("MachineMetadata");
+		$query->equalTo("deviceName", "Temp Sensor");
+		$results = $query->find();
+		echo $results[0]->get("isOn");
+ 	}
 ?>

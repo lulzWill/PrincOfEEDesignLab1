@@ -26,6 +26,8 @@ int numOfLEDs = 7;
 //Temperature Sensor Pin
 int tempPin = 2; //DS18S20 Signal pin on digital 2
 int intTemp = 0;
+float previousTemp = 0;
+float temperature = 0;
 String parametri = "";          //String of POST parameters
 
 //IP Address of the sever on which there is the WS: http://www.mywebsite.com/
@@ -97,10 +99,13 @@ void displayOn() {
 }
 
 void loop(void) {
-  float temperature = getTemp();
+  temperature = getTemp();
   if (temperature == -1000)
   {
     HttpClient client;
+    parametri = "http://princofeedesignlab1-tempsensor.rhcloud.com/ispressed.php?action=unplugged";
+    client.get(parametri);
+
     while (temperature == -1000) {
       parametri = "http://princofeedesignlab1-tempsensor.rhcloud.com/words.php?temp=null";
       client.get(parametri);
@@ -111,6 +116,10 @@ void loop(void) {
       delay(1000);
       temperature = getTemp();
     }
+
+    parametri = "http://princofeedesignlab1-tempsensor.rhcloud.com/ispressed.php?action=plugged";
+    client.get(parametri);
+
   }
 
   if (isOn()) {
@@ -119,14 +128,20 @@ void loop(void) {
     allLightsOff();
   }
 
-  setTemp(temperature);
-  Serial.println(temperature);
+  //  if (((previousTemp - temperature) > 20) || ((previousTemp - temperature) > -20))
+  if ((temperature - previousTemp < 20.0) && (temperature - previousTemp > -20.0))
+  {
+    setTemp(temperature);
+    Serial.println("Sent: " + String(temperature));
 
-  temperature += 0.5;
-  intTemp = (int) temperature;
-  Serial.println(intTemp);
+    temperature += 0.5;
+    intTemp = (int) temperature;
+    temperature -= 0.5;
+  }
+  Serial.println("Previous: " + String(previousTemp));
+  Serial.println("Current: " + String(temperature));
   Serial.println();
-  delay(1000);
+  previousTemp = temperature;
 }
 
 void allLightsOff() {
