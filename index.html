@@ -22,7 +22,7 @@
 	    <![endif]-->
 	    <input type="text" hidden="true" value="C" id="tempType"></input>
 	    <input type="text" hidden="true" value="" id="tempVal"></input>
-	    <input type="text" hidden="true" value="false" id="wentOver"></input>
+	    <input type="text" hidden="true" value="no" id="wentOver"></input>
 	    <input type="number" hidden="true" value="0" id="lastWritten"></input>
 		<input type="text" hidden="true" value="" id="lastId"></input>
 
@@ -212,10 +212,8 @@
 
 										if(document.getElementById("lastId").value == object.id) {
 											document.getElementById("lastWritten").value = parseInt(document.getElementById("lastWritten").value, 10) + 1;
-											console.log(document.getElementById("lastWritten").value);
 										} else {
 											document.getElementById("lastId").value = object.id;
-											console.log(document.getElementById("lastId").value)
 											document.getElementById("lastWritten").value = 0;
 										}
 
@@ -228,14 +226,14 @@
 
 										queryThree.first({
 											success: function(object) {
-												if(document.getElementById("tempVal").value > object.get("upperBound") && document.getElementById("wentOver").value == "false") {
-													document.getElementById("wentOver").value = "true";
+												if(parseFloat(document.getElementById("tempVal").value) > parseFloat(object.get("upperBound")) && document.getElementById("wentOver").value == "no") {
+													document.getElementById("wentOver").value = "yes";
 													$.get("sendmail.php?sendTo=" + object.get("phoneNumber") + "&body=" + object.get("messageBody"));
-												} else if(document.getElementById("tempVal").value < object.get("lowerBound") && document.getElementById("wentOver").value == "false") {
-													document.getElementById("wentOver").value = "true";
+												} else if(parseFloat(document.getElementById("tempVal").value) < parseFloat(object.get("lowerBound")) && document.getElementById("wentOver").value == "no") {
+													document.getElementById("wentOver").value = "yes";
 													$.get("sendmail.php?sendTo=" + object.get("phoneNumber") + "&body=" + object.get("messageBody2"));
-												} else if(document.getElementById("tempVal").value > object.get("lowerBound") && document.getElementById("tempVal").value < object.get("upperBound")){
-													document.getElementById("wentOver").value = "false";
+												} else if(parseFloat(document.getElementById("tempVal").value) > parseFloat(object.get("lowerBound")) && parseFloat(document.getElementById("tempVal").value) < parseFloat(object.get("upperBound"))){
+													document.getElementById("wentOver").value = "no";
 												}
 											},
 											error: function(error) {
@@ -304,6 +302,9 @@
 			<div class="demo-container">
 				<div id="placeholder" class="demo-placeholder"></div>
 			</div>
+			<h4 style="margin-left: 30%;">
+				Seconds From Current Time
+			</h4>
 		</div>
 		<div id="footer">
 			<h2 id="currTemp">Current Temperature: </h2>
